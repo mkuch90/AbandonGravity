@@ -1,0 +1,394 @@
+using UnityEngine;
+using System.Collections;
+using System;
+
+// Require a character controller to be attached to the same game object
+[AddComponentMenu("2D Platformer/Platformer Controller")]
+
+public class PlatformerController : MonoBehaviour,MassObject
+{
+
+
+    #region Variables & Structs
+
+    [System.Serializable]
+    public class PlatformerControllerMovement
+    {
+		// The speed when walking 
+		[System.NonSerialized]
+		public const float walkSpeed = 5.0f;
+		// when space is pressed, we jump
+		[System.NonSerialized]
+		public const float jumpSpeed = 10f; 
+		[System.NonSerialized]   
+		public float jumpOffset = 1f; //Lag time after jumping before movement is registers (so we have a chance to unground)
+		[System.NonSerialized]
+        public float GravityFactor = 1.4f;
+        // This controls how fast the graphics of the character "turn around" when the player turns around using the controls.
+        public float rotationSmoothing = 10.0f;
+
+        
+        [System.NonSerialized]
+        public float verticalSpeed = 0.0f;
+        [System.NonSerialized]
+        public float horizontalSpeed = 0.0f;
+        [System.NonSerialized]
+        public bool isMoving = false;
+        [System.NonSerialized]
+        public float directionMod = 1f; 
+        [System.NonSerialized]
+        public Vector3 velocity;
+        [System.NonSerialized]
+		public Vector3 acceleration;
+		[System.NonSerialized]
+		public float jumpTime = 0f;   //Last Jump time
+		[System.NonSerialized]
+		public float lastTimeOnGround = 0f;   //Last Jump time
+        [System.NonSerialized]
+        public bool jumped = false;
+        private const float horizontalControlPower = 2f;
+        public float InAirControlPower
+        {
+            get { return horizontalControlPower; }
+        }
+
+    }
+
+
+    private SpawnPoint spawnPoint;
+
+    private PlatformerControllerMovement movement;
+    private LiftableObject holding;
+    private Transform oldParentOfHeldObject;
+    private PlatformerWorldModel model;
+    private PlatformerPlayerAnimation ani;
+    private bool firstFixedUpdate = false;
+
+    #endregion
+
+    #region Applicators
+    void ApplyMovement(float horizontalInput)
+    {
+        // Grounded controls
+        if (Input.GetButtonDown("Jump"))
+        {
+			movement.velocity += (model.GravityDirectionUp() * PlatformerControllerMovement.jumpSpeed); //perhaps needs to be migrated to fixedupdate
+            movement.jumpTime = Time.time;
+            ani.PlayJump();
+        }
+        if (movement.jumpTime + movement.jumpOffset < Time.time)  //Wait an offset of time after a jump to allow movement (allows time to unground)
+        {
+            float targetSpeed = Mathf.Min(Mathf.Abs(horizontalInput), 1.0f);
+
+            if (Math.Abs(horizontalInput) > 0  && model.GetForwardDistance() >1.3f)
+            {
+                ani.PlayRun();
+            }
+            else
+            {
+                ani.PlayIdle();
+            }
+			targetSpeed *= PlatformerControllerMovement.walkSpeed;
+            float horizontal = Math.Abs(Vector3.Dot(model.GroundNormal(), model.GravityDirectionUp())); //used to "step down" slopes
+
+            movement.velocity += (ForwardDirection()) * horizontal;
+            movement.velocity += 5 * (model.GravityDirection() * (1 - horizontal));
+            limitMaxSpeed(targetSpeed);
+        }
+    }
+    void ApplyThrusters(float horizontalInput)
+    {
+        Vector3 thrustMod = Vector3.zero;
+        horizontalInput = Mathf.Abs(horizontalInput);
+        thrustMod = (ForwardDirection() * horizontalInput).normalized * movement.InAirControlPower;            
+        movement.acceleration += thrustMod; //thrusters use the same component as gravity for velocity
+
+    }
+    void ApplyGravity()
+    {
+        movement.acceleration += model.GravityAcceleration() * movement.GravityFactor;//add the acceleration to the global acceleration (which is reset every update)
+    }
+    #endregion
+
+    #region Updators
+    void Update()
+    {
+        if (!firstFixedUpdate)
+        {
+            return;
+        }
+        float horizontalInput = Input.GetAxisRaw("Horizontal");
+        if (model.IsGrounded())
+        {
+            ApplyMovement(horizontalInput);
+        }
+    }
+    void FixedUpdate()
+    {
+        firstFixedUpdate = true;
+        if (holding != null)
+        {
+			//holding.SetTargetPosition(rigidbody.position + (rigidbody.rotation * Vector3.up).normalized * 3.5f + (rigidbody.rotation * Vector3.forward) * 1f);
+			holding.SetTargetPosition(rigidbody.position + (rigidbody.rotation * Vector3.up).normalized * 0.3f+(rigidbody.rotation * Vector3.forward) * .8f);
+			holding.SetTargetRotation((rigidbody.rotation * Vector3.up).normalized, (rigidbody.rotation * Vector3.forward));
+			
+        }
+
+        /*
+         * This updates the current model view, such as whether or not the player is grounded,
+         * the current gravity at this location, and the slope of the nearest ground.
+         * 
+         * */
+        model.TakeGravityMeasurement(rigidbody.position);  //measure the world    
+        if (model.GravityDirection() == Vector3.zero)
+        {
+            Spawn();
+        }
+		bool wasGounded=model.IsGrounded ();
+        model.TakePositionMeasurements(rigidbody.position, ForwardDirection());  //measure the player's surroundings
+  
+		/*
+		 * The follosing blocks figure out if we've recently landed and therefore should show an animation
+		 * */
+		if (wasGounded)
+		{
+			movement.lastTimeOnGround = Time.time;
+		}
+        if (!wasGounded && model.IsGrounded()){
+
+			if (holding != null || Input.GetAxisRaw("Horizontal") == 0)
+			{
+				ani.PlayLand();
+			}
+            else {
+                ani.PlayRoll(Time.time-movement.lastTimeOnGround);
+            }
+        }
+
+		/*
+		 * This keeps the player slightly above the ground so we don't fall through
+		 * */
+		float closeGroundDistance = 0.35f; //Needs to be llower than 0.4 to press buttons
+		if(model.pointyGround){ //Used so we don't get stuck on one side of the point
+			closeGroundDistance+= 0.3f;
+		}
+        if (model.IsGrounded() && model.DistanceToGround() <closeGroundDistance)
+        {
+            rigidbody.position += model.GravityDirectionUp() * (closeGroundDistance - model.DistanceToGround());
+        }
+		float closeWallDistance = 1.3f;
+		if (holding != null && model.GetForwardDistance() < closeWallDistance)
+		{
+			rigidbody.position -= ForwardDirection() * (closeWallDistance - model.GetForwardDistance());
+		}
+		if (holding == null && !(Input.GetAxisRaw("Horizontal") == 0) && model.GetForwardDistance() < closeWallDistance)
+		{
+			ani.PlayRunIntoWall();
+		}
+        /*
+         * //must get zeroed every frame (otherwise the system won't work)
+         * All sets to movement.acceleration beyond this point should be relative (+= or -=) but not set it.
+         * If the're not relative, order matters.
+         */
+        movement.acceleration = Vector3.zero;
+
+        /*
+         * Gets the horizontal movement input.
+         * */
+        float horizontalInput = Input.GetAxisRaw("Horizontal");
+        movement.isMoving = Mathf.Abs(horizontalInput) > 0.1f;
+        if (horizontalInput != 0)
+        {
+            movement.directionMod = horizontalInput;
+        }
+
+        /*
+         * Must be done second in the order, anything after movement (but before controller.move) can't directly set velocity or bad things will happen
+         * If grounded, the velovity will be set to the movement 
+         * or 0 in the direction of movement.
+         * BUG: Going downhill, the player will just move forward and gravity will bring it down. Its choppy.
+         * Solution: Move in the direction of the ground normal and not the direction we are facing
+         */
+
+        if (model.IsSliding())
+        {
+            ani.PlaySlide();
+        }
+        else if (!model.IsGrounded())
+        {
+            ani.PlayFalling();
+            ApplyThrusters(horizontalInput);
+        }
+        /*
+         * Gravity is applied by getting a value for the acceleration from the world model.
+         * Gravity is applied by adding the acceleration to movement.acceleration.
+         */
+        ApplyGravity();
+
+        /*
+         * This does teh actual movement.
+         * */
+        MoveCharacter();
+
+    }
+
+    private void MoveCharacter()
+    {
+        //calculate the final velocity from any acceleration on the object
+        movement.velocity += movement.acceleration * Time.deltaTime;
+        // Calculate actual motion, speed limit
+        limitMaxSpeed(Constants.MaxSpeed);
+        // Move our character!
+        Vector3 oldPosition = rigidbody.position;
+        Vector3 currentMovementOffset = movement.velocity * Time.deltaTime;
+		//If we're not grounded and the vector of movement is locally dowdwards, move along the slope rather than down.
+        if (model.HighAngleNotGrounded() && Vector3.Dot(currentMovementOffset.normalized,model.GravityDirection())>0) //needs to make sure we're actually moving into the slope
+        {
+            Vector3 SurfaceSlope = model.SurfaceSlope();
+            currentMovementOffset = SurfaceSlope * Vector3.Dot(currentMovementOffset, SurfaceSlope);
+
+            //TODO : Add slide animation
+        }
+        rigidbody.velocity = Vector3.zero;
+        rigidbody.MovePosition(rigidbody.position + currentMovementOffset);
+        if (!model.IsGrounded())
+        {
+            movement.velocity = (rigidbody.position - oldPosition) / Time.deltaTime;
+        }
+        rigidbody.velocity = Vector3.zero;
+       // rigidbody.velocity = movement.velocity;
+
+        Quaternion oldrotation = rigidbody.rotation;
+        rigidbody.rotation = Quaternion.Lerp(oldrotation, Quaternion.LookRotation((ForwardDirection()), model.GravityDirectionUp()), Time.deltaTime * 8);
+
+    }
+    #endregion
+
+    #region Accessors & Startup
+
+    void limitMaxSpeed(float speed)
+    {
+        if (movement.velocity.sqrMagnitude > speed * speed) //50 should be replaces by a variable
+        {
+            movement.velocity = movement.velocity.normalized * speed;
+        }
+    }
+    public void fUpdate()
+    {
+        //Vector3 newPos = transform.position;
+       // newPos.z = 0f;
+      //  transform.position = newPos;
+
+    }
+    public void OnTriggerEnter(Collider col)
+    {
+        Debug.Log("Player Collision");
+    }
+    public void GrabObject(LiftableObject obj)
+    {
+		ani.PickUpBox ();
+        holding = obj;
+    }
+    public void DropObject()
+    {
+        if (holding == null)
+        {
+            return;
+        }
+		ani.DropBox ();
+        holding.Deactivate();
+        holding = null;
+    }
+    public bool IsHoldingObject()
+    {
+        return holding != null;
+    }
+    public Vector3 GetVelocity()
+    {
+        return movement.velocity;
+    }
+
+    public bool IsMoving()
+    {
+        return movement.isMoving;
+    }
+
+    public Vector3 ForwardDirection()
+    {
+        return Constants.Rotate90(model.GravityDirection() * Mathf.Sign(movement.directionMod)); 
+    }
+
+    void Start()
+    {
+        if (movement == null)
+        {
+            movement = new PlatformerControllerMovement();
+        }
+        ani = (PlatformerPlayerAnimation)GetComponent("PlatformerPlayerAnimation");
+        model = new PlatformerWorldModel();
+    }
+    void Awake()
+    {
+        Spawn();
+    }
+    void Spawn()
+    {
+        if (movement == null)
+        {
+            movement = new PlatformerControllerMovement();
+        }
+        movement.velocity = Vector3.zero;
+        spawnPoint = (SpawnPoint)FindObjectOfType(typeof(SpawnPoint));
+        rigidbody.position = spawnPoint.transform.position;
+    }
+    void OnDeath()
+    {
+        Spawn();
+    }
+  
+    void Reset()
+    {
+        gameObject.tag = "Player";
+    }
+
+    public Vector3 GetUpDirection()
+    {
+        return model.GravityDirectionUp();
+    }
+    public Vector3 GetDownDirection()
+    {
+        return model.GravityDirection();
+    }
+    public Vector3 AlphaPosition()
+    {
+        return model.AlphaHitLocation();
+    }
+    public Vector3 BetaPosition()
+    {
+        return model.BetaHitLocation();
+    }
+    public Vector3 AlphaSourcePosition()
+    {
+        return model.AlphaSourceLocation();
+    }
+    public Vector3 BetaSourcePosition()
+    {
+        return model.BetaSourceLocation();
+    }
+    public float GetMass()
+    {
+        if (holding != null)
+        {
+            return rigidbody.mass + holding.GetMass();
+        }
+        return rigidbody.mass;
+    }
+    public void PushButton()
+    {
+        ani.PlayButtonPress();
+    }
+   
+    
+    
+#endregion
+}

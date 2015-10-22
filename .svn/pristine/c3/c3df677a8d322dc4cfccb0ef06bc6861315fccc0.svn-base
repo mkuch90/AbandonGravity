@@ -1,0 +1,47 @@
+using UnityEngine;
+using System.Collections;
+
+public class GravityDirectionModFactorTimer : GravityDirectionMod{
+
+    public float timer = 10f;
+    private float timeActivated = -1;
+    public float factor = 0.5f;
+    private bool activated = false;
+    public bool PlaySound = true;
+    public AudioSource TickSound;
+    public override void Activate()
+    {
+        if (activated)
+        {
+            audio.Play();
+            timeActivated = Time.time;
+            return;
+        }
+        targetObject.strength *= factor;
+        activated=true;
+        timeActivated = Time.time;
+        this.animation["LightUp"].speed = 1;
+        this.animation.Play("LightUp");
+        audio.Play();
+        TickSound.pitch = 1;
+        TickSound.Play();
+    }
+    protected override void Update()
+    {
+        base.Update();
+        if (!activated)
+        {
+            return;
+        }
+        if (Time.time > timeActivated + timer)
+        {
+            activated = false;
+            this.animation["LightUp"].speed = -1;
+            this.animation.Play("LightUp");
+            targetObject.strength /= factor;
+            audio.Play();
+            TickSound.Stop();
+        }
+        
+    }
+}

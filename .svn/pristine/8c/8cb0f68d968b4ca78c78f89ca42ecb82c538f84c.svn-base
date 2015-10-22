@@ -1,0 +1,20 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Model\Triggers\DoorTriggerTarget.cs">
+    <Files>
+      <File FileName="Assets\Scripts\Model\GravityObject\GravityMod.cs" Line="122" Column="1" />
+      <File FileName="Assets\Scripts\Model\GravityObject\GravityResponseTarget.cs" Line="32" Column="35" />
+      <File FileName="Assets\Scripts\Model\Triggers\DoorTriggerTarget.cs" Line="16" Column="58" />
+      <File FileName="Assets\Scripts\Model\Triggers\TriggerTarget.cs" Line="14" Column="11" />
+      <File FileName="Assets\Scripts\Controller\RestartLevelMenuOption.cs" Line="95" Column="1" />
+      <File FileName="Assets\Scripts\Model\Character Controls\PlatformerController.cs" Line="153" Column="10" />
+      <File FileName="Assets\Scripts\Model\Level\Constants.cs" Line="36" Column="3" />
+      <File FileName="Assets\Scripts\Model\Triggers\ButtonTrigger.cs" Line="7" Column="37" />
+      <File FileName="Assets\Scripts\Model\Triggers\Trigger.cs" Line="7" Column="11" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

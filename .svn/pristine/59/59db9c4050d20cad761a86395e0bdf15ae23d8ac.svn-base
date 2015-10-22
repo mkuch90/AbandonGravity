@@ -1,0 +1,54 @@
+using UnityEngine;
+using System.Collections;
+
+
+[RequireComponent(typeof(Transform))]
+public class GravityObject : MonoBehaviour {
+
+    public float strength = 5f;
+    public bool constantGravity = false;
+    public Vector3 constantDirection = new Vector3(0,-1,0);
+	public static float gravityConstant= 1f;
+	public static float forceCuttoff = 0.1f;
+	public static float minSquaredDistance = 10f;
+	
+	
+
+	public Vector3 getPosition(){
+		return transform.position;	
+	}
+	/// <summary>
+	/// Gets the acceleration this object imparts due to gravity. Uses basic Newtonian physics.
+	/// </summary>
+	/// <returns>
+	/// The acceleration in the form of a 3-Dimentional vector.
+	/// </returns>
+	/// <param name='sourcePosition'>
+	/// The position of the object being affected by this object.
+	/// </param>
+	public Vector3 getAcceleration(Vector3 sourcePosition){
+        if (constantGravity)
+        {
+            return constantDirection * strength;
+        }
+		Vector3 positionDiff = getPosition()-sourcePosition;
+		float magnitudeSqr = positionDiff.sqrMagnitude;
+		magnitudeSqr = Mathf.Max(magnitudeSqr,minSquaredDistance);
+        float force = (gravityConstant * strength / magnitudeSqr);
+		if(force < forceCuttoff){
+			return Vector3.zero;	
+		}
+		return positionDiff.normalized*force;
+	}
+	void Start () {
+        GravityManager.addObject(this);
+	}
+	void OnDestroy () {
+        GravityManager.RemoveObject(this);
+	}
+	
+	// Update is called once per frame
+	void Update () {
+
+	}
+}

@@ -1,0 +1,41 @@
+using UnityEngine;
+using System.Collections;
+
+
+/// <summary>
+/// Used to debug where the system thinks the ground is visually.
+/// </summary>
+public class DebugRaycast : MonoBehaviour {
+
+
+    private PlatformerController controller;
+    public bool alpha = true;
+    public bool source = false;
+	void Start () {
+		controller = (PlatformerController)FindObjectOfType(typeof(PlatformerController)); //SLOW, only called once
+	}
+	
+	void Update () {
+        if (alpha)
+        {
+            if(source){
+            transform.position = controller.AlphaSourcePosition();
+
+            }
+            else{
+            transform.position = controller.AlphaPosition();
+            }
+        }
+        else
+        {
+            if(source){
+            transform.position = controller.BetaSourcePosition();
+
+            }
+            else{
+            transform.position = controller.BetaPosition();
+            }
+
+        }
+	}
+}

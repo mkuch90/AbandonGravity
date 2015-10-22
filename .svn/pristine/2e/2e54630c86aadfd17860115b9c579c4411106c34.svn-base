@@ -1,0 +1,23 @@
+﻿using UnityEngine;
+using System.Collections;
+
+
+public class Asteroid : MonoBehaviour {
+	static System.Random rand;
+	// Use this for initialization
+	void Start () {
+		if (rand == null) { rand = new System.Random(3452345); }
+		if (rand.Next(1, 100) % 2 ==0) {
+			this.rigidbody.velocity = new Vector3(rand.Next(0, 10) / 10f - 0.5f, rand.Next(0, 10) / 10f - 0.5f);
+		}
+		
+		if (rand.Next(1, 100) % 2 ==0) {
+			this.rigidbody.angularVelocity = new Vector3(rand.Next(0, 10) / 10f - 0.5f, rand.Next(0, 10) / 10f - 0.5f, rand.Next(0, 10) / 10f - 0.5f);
+		}
+	}
+	
+	// Update is called once per frame
+	void Update () {
+	
+	}
+}

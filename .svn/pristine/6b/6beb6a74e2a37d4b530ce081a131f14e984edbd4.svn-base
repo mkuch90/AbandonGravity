@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+	<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+	<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+	<ProductVersion>10.0.20506</ProductVersion>
+	<SchemaVersion>2.0</SchemaVersion>
+	<ProjectGuid>{A282D3BB-3F15-FEB3-9751-1FDD0362F082}</ProjectGuid>
+	<OutputType>Library</OutputType>
+	<AppDesignerFolder>Properties</AppDesignerFolder>
+	<RootNamespace></RootNamespace>
+	<AssemblyName>Assembly-CSharp</AssemblyName>
+	<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+	<FileAlignment>512</FileAlignment>
+	<BaseDirectory>Assets</BaseDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	<DebugSymbols>true</DebugSymbols>
+	<DebugType>full</DebugType>
+	<Optimize>false</Optimize>
+	<OutputPath>Temp\bin\Debug\</OutputPath>
+	<DefineConstants>DEBUG;TRACE;UNITY_STANDALONE_WIN;ENABLE_MICROPHONE;ENABLE_TEXTUREID_MAP;ENABLE_AUDIO_FMOD;UNITY_STANDALONE;ENABLE_MONO;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_GENERICS;ENABLE_SUBSTANCE;INCLUDE_WP8SUPPORT;ENABLE_MOVIES;ENABLE_WWW;ENABLE_IMAGEEFFECTS;ENABLE_WEBCAM;INCLUDE_METROSUPPORT;RENDER_SOFTWARE_CURSOR;ENABLE_NETWORK;ENABLE_PHYSICS;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_2D_PHYSICS;ENABLE_SHADOWS;ENABLE_AUDIO;ENABLE_NAVMESH_CARVING;ENABLE_DUCK_TYPING;ENABLE_SINGLE_INSTANCE_BUILD_SETTING;UNITY_4_3_0;UNITY_4_3;ENABLE_PROFILER;UNITY_EDITOR;UNITY_EDITOR_WIN;UNITY_TEAM_LICENSE</DefineConstants>
+	<ErrorReport>prompt</ErrorReport>
+	<WarningLevel>4</WarningLevel>
+	<NoWarn>0169</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+	<DebugType>pdbonly</DebugType>
+	<Optimize>true</Optimize>
+	<OutputPath>Temp\bin\Release\</OutputPath>
+	<DefineConstants>TRACE</DefineConstants>
+	<ErrorReport>prompt</ErrorReport>
+	<WarningLevel>4</WarningLevel>
+	<NoWarn>0169</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+	<Reference Include="System" />
+    <Reference Include="System.XML" />
+	<Reference Include="System.Core" />
+	<Reference Include="System.Xml.Linq" />
+	<Reference Include="UnityEngine">
+	  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEngine.dll</HintPath>
+	</Reference>
+	<Reference Include="UnityEditor">
+	  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEditor.dll</HintPath>
+	</Reference>
+  </ItemGroup>
+  <ItemGroup>
+     <Compile Include="Assets\Scripts\Controller\Controller.cs" />
+     <Compile Include="Assets\Scripts\Controller\DeathMenu.cs" />
+     <Compile Include="Assets\Scripts\Controller\DeathMenuContainer.cs" />
+     <Compile Include="Assets\Scripts\Controller\MainMenuMenuOption.cs" />
+     <Compile Include="Assets\Scripts\Controller\MenuContainer.cs" />
+     <Compile Include="Assets\Scripts\Controller\MenuOption.cs" />
+     <Compile Include="Assets\Scripts\Controller\PauseMenuContainer.cs" />
+     <Compile Include="Assets\Scripts\Controller\QuitMenuOption.cs" />
+     <Compile Include="Assets\Scripts\Controller\ResponseManager.cs" />
+     <Compile Include="Assets\Scripts\Controller\RestartLevelMenuOption.cs" />
+     <Compile Include="Assets\Scripts\Controller\UnpauseButtonMenuOption.cs" />
+     <Compile Include="Assets\Scripts\DebugRaycast.cs" />
+     <Compile Include="Assets\Scripts\DontDestroy.cs" />
+     <Compile Include="Assets\Scripts\Model\Asteroid.cs" />
+     <Compile Include="Assets\Scripts\Model\Camera\CameraFlyby.cs" />
+     <Compile Include="Assets\Scripts\Model\Camera\CameraScrolling.cs" />
+     <Compile Include="Assets\Scripts\Model\Camera\CameraTargetAttributes.cs" />
+     <Compile Include="Assets\Scripts\Model\Character Controls\PlatformerController.cs" />
+     <Compile Include="Assets\Scripts\Model\Character Controls\PlatformerPlayerAnimation.cs" />
+     <Compile Include="Assets\Scripts\Model\Character Controls\PlatformerWorldModel.cs" />
+     <Compile Include="Assets\Scripts\Model\FastRotation.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\ComplexObject.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\ConstantGravityObject.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\DirectionGravityMod.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\FactorGravityMod.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\GravityManager.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\GravityMod.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\GravityObject.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\GravityResponseTarget.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\GravityTarget.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\LiftableObject.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\LiftableObjectManager.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\MassObject.cs" />
+     <Compile Include="Assets\Scripts\Model\GravityObject\NewtonGravityObject.cs" />
+     <Compile Include="Assets\Scripts\Model\Input\InputWatcher.cs" />
+     <Compile Include="Assets\Scripts\Model\Level\BackgroundMusic.cs" />
+     <Compile Include="Assets\Scripts\Model\Level\Constants.cs" />
+     <Compile Include="Assets\Scripts\Model\Level\DeathTrigger.cs" />
+     <Compile Include="Assets\Scripts\Model\Level\LevelAttributes.cs" />
+     <Compile Include="Assets\Scripts\Model\Level\LevelLoader.cs" />
+     <Compile Include="Assets\Scripts\Model\Level\SpawnPoint.cs" />
+     <Compile Include="Assets\Scripts\Model\Triggers\ButtonTrigger.cs" />
+     <Compile Include="Assets\Scripts\Model\Triggers\DeathZone.cs" />
+     <Compile Include="Assets\Scripts\Model\Triggers\DoorTriggerTarget.cs" />
+     <Compile Include="Assets\Scripts\Model\Triggers\ResponseTarget.cs" />
+     <Compile Include="Assets\Scripts\Model\Triggers\Trigger.cs" />
+     <Compile Include="Assets\Scripts\Model\Triggers\TriggerTarget.cs" />
+     <Compile Include="Assets\Scripts\View\Heads-Up Display\ButtonOption.cs" />
+     <Compile Include="Assets\Scripts\View\Heads-Up Display\ButtonOptions.cs" />
+     <Compile Include="Assets\Scripts\View\Heads-Up Display\ContextInfo.cs" />
+     <Compile Include="Assets\Scripts\View\Heads-Up Display\ContextInfoDisplay.cs" />
+     <None Include="Assets\Fonts\COG 2  info.txt" />
+     <None Include="Assets\Fonts\Font Info.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Assembly-CSharp-firstpass-vs.csproj">
+      <Project>{5235F490-8E44-538C-ECEF-A6B83173E2A9}</Project>      <Name>Assembly-CSharp-firstpass-vs</Name>    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+	   Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  
+</Project>

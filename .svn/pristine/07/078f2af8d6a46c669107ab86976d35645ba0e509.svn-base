@@ -1,0 +1,49 @@
+using UnityEngine;
+using System.Collections;
+
+public class GravityDirectionMod : MonoBehaviour,ResponseTarget {
+
+    public GravityObject targetObject;
+    private PlatformerController controller;
+    public Vector3 modDirection = new Vector3(0, -1, 0);
+    // Use this for initialization
+	void Start () {
+        ResponseManager.AddActivateObject(this);
+        audio.volume = Constants.effectsVolume;
+        controller = (PlatformerController)FindObjectOfType(typeof(PlatformerController));
+	}
+	
+	// Update is called once per frame
+	protected virtual void Update () {
+        if (targetObject == null)
+        {
+            Debug.LogError("GravityDirectionMod objects require targets.");
+            return;
+        }
+
+        if (controller == null)
+        {
+            Debug.LogError("GravityDirectionMod objects require controllers.");
+            return;
+        }
+	}
+    public virtual void Activate()
+    {
+        audio.Play();
+        targetObject.constantDirection = modDirection;
+    }
+    public void Deactivate()
+    {
+
+    }
+    public void SetPlayer(PlatformerController controller) { }
+    public Vector3 GetPosition()
+    {
+        return transform.position;
+    }
+    public void OnDestroy()
+    {
+        ResponseManager.RemoveActivateObject(this);
+    }
+
+}

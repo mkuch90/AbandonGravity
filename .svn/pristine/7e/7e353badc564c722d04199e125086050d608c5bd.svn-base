@@ -1,0 +1,296 @@
+using UnityEngine;
+using System.Collections;
+
+public class PlatformerPlayerAnimation : MonoBehaviour
+{
+// Adjusts the speed at which the run animation is played back
+	public float runAnimationSpeedModifier = 1.5f;
+// Adjusts the speed at which the jump animation is played back
+	public float jumpAnimationSpeedModifier = 2.0f;
+
+    public Transform animationTarget;
+    public Transform rollSoundTarget;
+	private PlatformerController controller;
+	private string jumpAnimationName = "Jump";
+	private string runAnimationName = "Run";
+	private string idleAnimationName = "Idle";
+    private string fallAnimationName = "Flailing";
+    private string landAnimationName = "Landing";
+    private string rollAnimationName = "Roll";
+    private string slideAnimationName = "Sliding";
+	private string buttonAnimationName = "ButtonPress";
+	private string boxFallAnimationName = "FallingBox";
+	private string boxIdleAnimationName = "IdleBox";
+	private string boxRunAnimationName = "BoxRun";
+	private string runIntoWallAnimationName = "RunIntoWall";
+	private string boxLandingAnimationName = "LandingBox";
+	private string boxSlideAwayAnimationName = "SlidingBoxAway";
+	private string boxSlideTowardsAnimationName = "SlidingBoxTowards";
+    private float lastJumpTime = 0f;
+	private float lastRunIntoWall = 0f;
+	private bool holdingBox = false;
+
+	public void DropBox(){
+		animationTarget.animation.Stop ();
+		holdingBox = false;
+	}
+	public void PickUpBox(){
+		animationTarget.animation.Stop ();
+		holdingBox = true;
+	}
+    
+
+    [System.NonSerialized]
+    private float timeLastRun = 0f;
+
+	void Start ()
+	{
+		
+		controller = (PlatformerController)GetComponent("PlatformerController");
+        animationTarget.animation.Stop();
+        audio.volume = Constants.effectsVolume;	
+		// By default loop all animations
+        animationTarget.animation.wrapMode = WrapMode.Loop;
+		
+		// Jump animation are in a higher layer:
+		// Thus when a jump animation is playing it will automatically override all other animations until it is faded out.
+		// This simplifies the animation script because we can just keep playing the walk / run / idle cycle without having to spcial case jumping animations.
+
+       
+        
+        int jumpingLayer = 10;
+		int normalLayer = 9;
+		int rollLayer=11;
+		int boxLayer=12;
+		AnimationState run = animationTarget.animation[runAnimationName];
+		run.layer = normalLayer;
+		run.speed *= runAnimationSpeedModifier;
+
+        AnimationState jump = animationTarget.animation[jumpAnimationName];
+		jump.layer = jumpingLayer;
+		jump.speed *= jumpAnimationSpeedModifier;
+		jump.wrapMode = WrapMode.Once;
+
+        AnimationState falling = animationTarget.animation[fallAnimationName];
+		falling.layer = normalLayer;
+		falling.wrapMode = WrapMode.Loop;
+
+
+        AnimationState idle = animationTarget.animation[idleAnimationName];
+		idle.layer = normalLayer;
+        idle.wrapMode = WrapMode.Loop;
+
+
+        AnimationState land = animationTarget.animation[landAnimationName];
+        land.layer = normalLayer;
+		land.speed *= 1f;
+        land.wrapMode = WrapMode.Once;
+
+        AnimationState roll = animationTarget.animation[rollAnimationName];
+        roll.speed *= 0.75f;
+		roll.layer = rollLayer;
+        roll.wrapMode = WrapMode.Once;
+
+
+
+        AnimationState slide = animationTarget.animation[slideAnimationName];
+		slide.layer = normalLayer;
+
+
+        AnimationState button = animationTarget.animation[buttonAnimationName];
+        button.speed *= 4f;
+        button.wrapMode = WrapMode.Once;
+        button.layer = normalLayer;
+
+        AnimationState holding = animationTarget.animation[boxIdleAnimationName];
+		holding.layer =boxLayer;
+        holding.wrapMode = WrapMode.Loop;
+
+		holding = animationTarget.animation[boxRunAnimationName];
+		holding.layer =boxLayer;
+		holding.speed *= runAnimationSpeedModifier;
+		holding.wrapMode = WrapMode.Loop;
+
+		holding = animationTarget.animation[runIntoWallAnimationName];
+		holding.layer = normalLayer;
+		holding.speed *= 1f;
+		holding.wrapMode = WrapMode.Once;
+
+		holding = animationTarget.animation[boxFallAnimationName];
+		holding.layer =boxLayer;
+		holding.wrapMode = WrapMode.Loop;
+
+		holding = animationTarget.animation[boxLandingAnimationName];
+		holding.layer = boxLayer;
+		holding.wrapMode = WrapMode.Once;
+
+		holding = animationTarget.animation[boxSlideAwayAnimationName];
+		holding.layer = boxLayer;
+		holding.wrapMode = WrapMode.Loop;
+
+		holding = animationTarget.animation[boxSlideTowardsAnimationName];
+		holding.layer = boxLayer;
+		holding.wrapMode = WrapMode.Loop;
+
+
+		
+	}
+
+	public void PlayRun()
+    {
+        if(holdingBox){
+				if (!animationTarget.animation.IsPlaying(boxRunAnimationName)){
+					animationTarget.animation.CrossFade(boxRunAnimationName, 0f);
+					timeLastRun = Time.time;
+				}
+				
+		}
+		else if (!animationTarget.animation.IsPlaying(runAnimationName) && !animationTarget.animation.IsPlaying(landAnimationName) && !animationTarget.animation.IsPlaying(rollAnimationName))
+		{
+			Debug.Log(Time.time+" "+"run");
+            	animationTarget.animation.CrossFade(runAnimationName, 0f);
+            	timeLastRun = Time.time;
+			}
+
+
+
+        if (!controller.audio.isPlaying)
+        {
+            controller.audio.Play();
+        }
+
+    }
+	public void PlayRunIntoWall()
+	{
+		if (holdingBox)
+		{
+			return;
+		}
+		if (!animationTarget.animation.IsPlaying(runIntoWallAnimationName) && Time.time -lastRunIntoWall > 2f )
+		{
+			Debug.Log(Time.time+" "+"Run into wall");
+			
+				animationTarget.animation.Stop();
+			lastRunIntoWall = Time.time;
+			animationTarget.animation.Play(runIntoWallAnimationName);
+			timeLastRun = Time.time;
+		}
+	}
+    public void PlayIdle()
+    {
+
+		if(holdingBox){
+			if (!animationTarget.animation.IsPlaying(boxIdleAnimationName) && !animationTarget.animation.IsPlaying(boxLandingAnimationName) && Time.time - timeLastRun > 0.5f)
+			{
+				
+				animationTarget.animation.CrossFade(boxIdleAnimationName, 0.1f);
+			}
+			return;
+		}
+		if (!animationTarget.animation.IsPlaying(idleAnimationName) ) 
+        {
+			if (!animationTarget.animation.IsPlaying(landAnimationName)) {
+				if( !animationTarget.animation.IsPlaying(rollAnimationName) && !animationTarget.animation.IsPlaying(runIntoWallAnimationName) && Time.time - timeLastRun > 0.5f && Time.time - lastRunIntoWall > 0.5f)
+				{
+				animationTarget.animation.CrossFade(idleAnimationName, 0.1f);
+				}
+			}
+        }
+
+    }
+    public void PlayJump()
+    {
+		if(holdingBox){
+			return;
+		}
+        if (!animationTarget.animation.IsPlaying(jumpAnimationName))
+        {
+			animationTarget.animation.Stop(idleAnimationName);
+            animationTarget.animation.CrossFade(jumpAnimationName,0.2f);      
+     
+        }
+        lastJumpTime = Time.time;
+    }
+	public void PlayLand()
+	{
+		if(holdingBox){
+			//if (!animationTarget.animation.IsPlaying(boxLandingAnimationName))
+			//{
+				Debug.Log(Time.time+" "+"BoxLand");
+				animationTarget.animation.Play(boxLandingAnimationName);
+				return;
+			//}
+		}
+
+        if (!animationTarget.animation.IsPlaying(rollAnimationName))
+		{
+			Debug.Log(Time.time+" "+"Land");
+            animationTarget.animation.Play(landAnimationName);           
+        }
+    }
+	public void PlayFalling()
+	{
+		if(holdingBox){
+			if (!animationTarget.animation.IsPlaying(boxFallAnimationName)&& Time.time - timeLastRun > 0.5f)
+			{
+				animationTarget.animation.CrossFade(boxFallAnimationName, 0.5f);
+			}
+			return;
+		}
+        if (!animationTarget.animation.IsPlaying(fallAnimationName)&& !animationTarget.animation.IsPlaying(rollAnimationName) && Time.time - timeLastRun > 0.5f)
+		{
+			Debug.Log(Time.time+" "+"fall");
+            animationTarget.animation.CrossFade(fallAnimationName, 0.5f);
+       }
+    }
+    public void PlayRoll(float timeUngrounded)
+    {
+		if(holdingBox){
+			return;
+		}
+        if (Time.time - lastJumpTime < 2f) //Stops you from jumping and rolling when you hit scenery mid-jump
+        {
+            return;
+		}
+		if(timeUngrounded < 1f){
+			return;
+		}
+		//velocity downward should be a certain speed
+        if (!animationTarget.animation.IsPlaying(rollAnimationName))
+		{
+			Debug.Log(Time.time+" "+"Roll");
+			animationTarget.animation.Stop();
+            animationTarget.animation.CrossFade(rollAnimationName, 0.2f);
+            rollSoundTarget.audio.Play();
+        }
+    }
+    public void PlaySlide()
+    {
+		if (holdingBox)
+		{
+			if (!animationTarget.animation.IsPlaying(boxSlideAwayAnimationName))
+			{
+				animationTarget.animation.CrossFade(boxSlideAwayAnimationName, 0.2f);
+
+			}
+			return;
+		}
+        if (!animationTarget.animation.IsPlaying(slideAnimationName))
+		{
+			Debug.Log(Time.time+" "+"Slide");
+            animationTarget.animation.CrossFade(slideAnimationName, 0.2f);
+        }
+    }
+    public void PlayButtonPress()
+    {
+		if(holdingBox){
+			return;
+		}
+        if (!animationTarget.animation.IsPlaying(buttonAnimationName))
+		{
+			Debug.Log(Time.time+" "+"Button");
+            animationTarget.animation.CrossFade(buttonAnimationName, 0.25f);
+        }
+    }
+	
+}

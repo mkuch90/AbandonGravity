@@ -1,0 +1,58 @@
+using UnityEngine;
+using System.Collections;
+
+public class GravityManager : MonoBehaviour {
+	
+	private static ArrayList gravitySources;
+	
+	public static GravityManager manager;
+	
+	public GravityManager(){
+	}
+    public static void addObject(GravityObject obj)
+    {
+        createManagerIfNull();
+        if (!gravitySources.Contains(obj))
+        {
+            gravitySources.Add(obj);
+        }			
+	}
+    public static bool RemoveObject(GravityObject obj)
+    {
+        if (!createManagerIfNull())
+        {
+            return false;
+        }
+        if (gravitySources.Contains(obj))
+        {
+            gravitySources.Remove(obj);
+            return true;
+        }
+        return false;
+    }
+    private static bool createManagerIfNull()
+    {
+
+        if (gravitySources == null)
+        {
+            gravitySources = new ArrayList();	
+            return false;
+        }
+        return true;
+    }
+    public static Vector3 GetAcceleration(Vector3 position)
+    {
+        if (!createManagerIfNull())
+        {
+            return Vector3.zero;
+        }
+        Vector3 retvalue = Vector3.zero;
+        foreach(object obj in gravitySources){
+            GravityObject grav = (GravityObject)obj;
+            Vector3 accel = grav.getAcceleration(position);
+				retvalue += accel;
+        }
+        return retvalue;
+    }
+	
+}

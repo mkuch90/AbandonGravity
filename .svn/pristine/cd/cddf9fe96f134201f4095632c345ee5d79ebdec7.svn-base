@@ -1,0 +1,55 @@
+using UnityEngine;
+using System.Collections;
+
+public enum MainMenuOptions
+{
+    Play,
+    Quit,
+    Options,
+    LevelSelect
+}
+/// <summary>
+/// This basically controls how the main menu screen works. The MainMenuOptions enum are all possible buttons.
+/// These are attached to individual buttons on the menu. 
+/// 
+/// This should probably be combined with the other menu controls to be more generic.
+/// </summary>
+public class MainMenuControl : MonoBehaviour {
+
+	// Use this for initialization
+
+    public MainMenuOptions menuOption;
+
+	void Start () {
+        defaultColor = renderer.material.color;
+	}
+    Color defaultColor;
+    void OnMouseEnter()
+    {
+        renderer.material.color = Color.yellow;
+    }
+    void OnMouseExit()
+    {
+        renderer.material.color = defaultColor;
+    }
+    void OnMouseUp()
+    {
+        if (menuOption == MainMenuOptions.Play)
+        {
+            Application.LoadLevel("Level00");
+        }
+        else if (menuOption == MainMenuOptions.Quit)
+        {
+            Application.Quit();
+        }
+        else if (menuOption == MainMenuOptions.LevelSelect)
+        {
+            Application.LoadLevel("LevelLoader1");
+           
+        }
+        else if (menuOption == MainMenuOptions.Options)
+        {
+            //Display options menu
+        }
+    }
+}

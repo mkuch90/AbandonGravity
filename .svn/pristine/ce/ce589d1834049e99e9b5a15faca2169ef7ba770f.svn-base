@@ -1,0 +1,346 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEngine;
+using System.Collections;
+
+public struct GroundRaycast
+{
+	public bool isGrounded;
+	public bool didHit;
+	public Vector3 hitLocation;
+	public Vector3 sourceLocation;
+	public bool closeToGround;
+	public RaycastHit hit;
+	public bool highAngleGround;
+	public float offsetFactor;
+}
+public struct ForwardRaycast
+{
+	public bool didHit;
+	public Vector3 hitLocation;
+	public Vector3 sourceLocation;
+	public float distance;
+	public RaycastHit hit;
+}
+
+/// <summary>
+///  The concept of this class is it measures the world around the player.
+///  There are two downward raycasts which measure the distance to the ground on either side of the player.
+///  Having two raycasts strattling the player prevents the player from
+///  getting stuck on geometry caused by the Unity physics engine.  
+///     
+/// Measuring the slope allows us to say the angle is too high to walk on. 
+/// If both raycasts are close enough to the ground to walk, and both are too high and angle
+/// to walk, the slope of the ground is averaged. This is to prevent the player gettin stuck
+/// on a pointy surface. If a play encounters a pointy surface,  such as  ^  , it will basically regiser
+/// as a flat surface.
+/// 
+/// There is a forwad raycast that measures the distance to the wall in fromt of the player.
+/// This is to stop the player from pusing a box through walls when holding a box. 
+/// </summary>
+class PlatformerWorldModel
+{
+    private Vector3 gravity;
+    private Vector3 gravityDirectionNormal;
+
+	//should be set to false unless otherwise found true
+	private bool isGrounded = false;
+
+	private bool highAngle = false;
+
+
+	private List<GroundRaycast> raycasts;
+	private ForwardRaycast forwardRay;
+	private Vector3 surfaceSlope;
+
+
+	private const float RaycastDistance = 3f;  //Further than we need
+    private const float RaycastOffset = .25f;  //distance fo the right and left raycast
+    private const float RaycastVertOffset = .7f; //moved the raycast to the feet
+    private float lastGroundedTime = 0f; 
+
+    //Serialized
+	private float GroundDistanceAllowed = .4f;  //how far above the gound is considered "Grounded". Experimntally determined along with the RaycastVertOffset
+	private float MaxSlopeAllowed = 0.8f;  //Dot product of slope and gravity direction, experimentally determined, ~35 degrees
+
+	public PlatformerWorldModel()
+	{
+		raycasts = new List<GroundRaycast>();
+	}
+	/// <summary>
+	/// Updates the state of the player with respect to gravity.
+	/// TODO: Profile performance.
+	/// </summary>
+	/// <param name="position"></param>
+    public void TakeGravityMeasurement(Vector3 position)
+    {
+        //Update gravity measurements
+		
+        gravity = GravityManager.GetAcceleration(position);
+        gravityDirectionNormal = gravity.normalized;
+    }
+	public void MeasureForward(Vector3 position, Vector3 forwardDirection)
+	{
+		forwardRay.sourceLocation = position - GravityDirection() * (RaycastVertOffset / 2);
+		forwardRay.didHit = Physics.Raycast(forwardRay.sourceLocation, forwardDirection, out forwardRay.hit, RaycastDistance);
+		if (!forwardRay.didHit)
+		{
+			forwardRay.distance = RaycastDistance;
+		}
+		else
+		{
+			forwardRay.distance = forwardRay.hit.distance;
+		}
+		forwardRay.hitLocation = forwardRay.sourceLocation + forwardDirection * forwardRay.distance;
+	}
+	/// <summary>
+	/// Takes a measurement of the position of the world. 
+	/// Figures out the ground and what's in front of the player.
+	/// </summary>
+	/// <param name="position">Player position</param>
+	/// <param name="forwardDirection">Forward direction</param>
+    public void TakePositionMeasurements(Vector3 position,Vector3 forwardDirection,int countOfRaycasts)
+	{
+
+
+		//take the new emasurements
+		raycasts.Clear();
+		Vector3 startPositionX = Constants.Rotate90(GravityDirection()) * (RaycastOffset);
+		Vector3 startPositionY = GravityDirection() * RaycastVertOffset;
+		float deltaPerRay = 2f / (((float)countOfRaycasts) - 1);
+		for (int i = 0; i < countOfRaycasts; i++)
+		{
+			float deltaFactor = deltaPerRay * (float)i - 1;
+			GroundRaycast ray = TakeMeasurementDelta(deltaFactor, position, startPositionX, startPositionY);
+			if (ray.isGrounded)
+			{
+				raycasts.Add(ray);
+				break;
+			}
+			if (ray.didHit && ray.hit.distance < GroundDistanceAllowed )//*4)
+			{
+				raycasts.Add(ray);
+			}
+		}
+		MeasureForward(position, forwardDirection);
+		isGrounded = false;
+		highAngle = false;
+		if(raycasts.Count() ==0){
+			return;
+		}
+		//if any of our measurements are grounded, quit and return.
+		foreach (GroundRaycast raycast in raycasts)
+		{
+			if (raycast.isGrounded)
+			{
+
+				isGrounded = true;
+				highAngle = false;
+				lastGroundedTime = Time.time;
+				return;
+			}
+		}
+		//below this point, we are not grounded by any individual raycast.
+		//There is at least one raycast close to the ground and none of the raycasts close to the ground
+		//are at a shallow angle
+		highAngle = true;
+		if (raycasts.Count() == 1)  //if there is only one raycast that hit, and is close to the gound, it is the source of truth
+		{
+			isGrounded = false;
+			highAngle = false;
+			return;
+		}
+		foreach (GroundRaycast first in raycasts)
+		{
+			foreach (GroundRaycast second in raycasts)
+			{
+				if (first.offsetFactor != second.offsetFactor && first.hitLocation !=second.hitLocation)
+				{
+					float denom = Mathf.Abs(first.offsetFactor - second.offsetFactor);
+					float angle = Mathf.Abs((first.hit.distance - second.hit.distance)) / denom;
+					
+					if (angle < 0.16f)
+					{
+						highAngle = false;
+						isGrounded = true;
+						lastGroundedTime = Time.time;
+					}
+					else
+					{
+					}
+
+				}
+			}
+		}
+    }
+	/// <summary>
+	/// Helper function of TakePositionMeasurement for measuring the ground
+	/// </summary>
+	/// <param name="offsetfactor">factor from -1 to 1 of the total offset distance</param>
+	/// <param name="position">Player position</param>
+	/// <returns></returns>
+
+	private GroundRaycast TakeMeasurementDelta(float offsetfactor, Vector3 position,Vector3 startPositionX,Vector3 startPositionY)
+	{
+		GroundRaycast raycast;
+		raycast.offsetFactor = offsetfactor;
+		raycast.sourceLocation = position + startPositionX * offsetfactor + startPositionY;
+		raycast.didHit = Physics.Raycast(raycast.sourceLocation, gravityDirectionNormal, out raycast.hit, RaycastDistance);
+		raycast.hitLocation = raycast.sourceLocation + gravityDirectionNormal * raycast.hit.distance;
+		if (!raycast.didHit)
+		{
+			raycast.closeToGround = false;
+			raycast.isGrounded = false;
+			raycast.highAngleGround = false;
+			return raycast;
+		}
+
+		raycast.closeToGround = raycast.hit.distance < GroundDistanceAllowed;
+		raycast.highAngleGround = Math.Abs(Vector3.Dot(raycast.hit.normal, -gravityDirectionNormal)) < MaxSlopeAllowed;
+		raycast.isGrounded = raycast.closeToGround && !raycast.highAngleGround;
+		return raycast;
+
+	}
+	
+	/// <summary>
+	/// Is the player on the ground and able to walk?
+	/// </summary>
+	/// <returns>bool</returns>
+    public bool IsGrounded()
+    {
+        return isGrounded;
+    }
+	/// <summary>
+	/// Gets the distance to the ground
+	/// </summary>
+	/// <returns></returns>
+    public float DistanceToGround()
+    {
+		float shortestDistance = RaycastDistance;
+		foreach (GroundRaycast ray in raycasts)
+		{
+			shortestDistance =Mathf.Min(ray.hit.distance , shortestDistance);
+		}
+		return shortestDistance;
+    }
+	/// <summary>
+	/// Gets the opposite of the direction gravity is pointing. Up.
+	/// Used to transform local rotation to global coordinates.
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 GravityDirectionUp()
+    {
+        return -gravityDirectionNormal;
+    }
+	/// <summary>
+	/// Gets the direction gravity is pointing. Down.
+	/// Used to transform local rotation to global coordinates.
+	/// It is the acceleration due to gravity normalized.
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 GravityDirection()
+    {
+        return gravityDirectionNormal;
+    }
+	/// <summary>
+	/// Returns the acceleration due to gravity.
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 GravityAcceleration()
+    {
+        return gravity;
+    }
+	/// <summary>
+	/// Is the player close to the ground and on a high angle slope?
+	/// </summary>
+	/// <returns></returns>
+    public bool HighAngleNotGrounded()
+    {
+
+		return highAngle;
+    }
+	/// <summary>
+	/// Returns a vector which runs along the surface of the ground
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 SurfaceSlope()
+    {
+		if (raycasts.Count == 0)
+		{
+			return Constants.Rotate90(GravityDirection());
+		}
+		if (raycasts.Count == 1)
+		{
+			return Constants.Rotate90(raycasts[0].hit.normal);
+		}
+		float minAngle = 10000f;
+
+		Vector3 retValue = Constants.Rotate90(GravityDirection());
+		foreach (GroundRaycast first in raycasts)
+		{
+			foreach (GroundRaycast second in raycasts)
+			{
+				if (first.offsetFactor != second.offsetFactor && first.hitLocation != second.hitLocation)
+				{
+					float denom = Mathf.Abs(first.offsetFactor - second.offsetFactor);
+					float angle = Mathf.Abs((first.hit.distance - second.hit.distance)) / denom;
+					if (angle < minAngle)
+					{
+
+						retValue = first.hitLocation - second.hitLocation;
+					}
+
+				}
+			}
+		}
+		return retValue.normalized;
+    }
+	/// <summary>
+	/// Gets the last time the player was on the gound
+	/// </summary>
+	/// <returns></returns>
+	public float GetLastGroundedTime()
+	{
+		return lastGroundedTime;
+	}
+	
+	/// <summary>
+	/// distance to the object ahead of the player.
+	/// Used for stopping the player from pushing the box through a wall.
+	/// </summary>
+	/// <returns></returns>
+	public float GetForwardDistance()
+	{
+		return forwardRay.distance;
+	}
+	/// <summary>
+	/// The following four functions are used for debugging.
+	/// </summary>
+	/// <returns></returns>
+    public List<Vector3> HitLocations()
+    {
+		List<Vector3> ret = new List<Vector3>();
+		foreach(GroundRaycast ray in raycasts){
+			ret.Add(ray.hitLocation);
+		}
+		return ret;
+    }
+    public List<Vector3> SourceLocations()
+	{
+		List<Vector3> ret = new List<Vector3>();
+		foreach(GroundRaycast ray in raycasts){
+			ret.Add(ray.sourceLocation);
+		}
+		return ret;
+    }
+	public Vector3 SourceForward()
+	{
+		return forwardRay.sourceLocation;
+	}
+	public Vector3 HitForward()
+	{
+		return forwardRay.hitLocation;
+	}
+}

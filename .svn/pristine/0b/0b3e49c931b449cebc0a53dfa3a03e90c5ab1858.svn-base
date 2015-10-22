@@ -1,0 +1,55 @@
+using UnityEngine;
+using System.Collections;
+
+public enum LevelOptions
+{
+    Level,
+    Navigate,
+    MainMenu
+}
+/// <summary>
+/// This basically controls how the level loader screen works. The LevelOptions enum are all possible buttons.
+/// These are attached to individual buttons on the menu. 
+/// 
+/// This should probably be combined with the other menu controls to be more generic.
+/// </summary>
+[RequireComponent(typeof(TextMesh))]
+public class LevelLoaderMenu : MonoBehaviour {
+
+    public LevelOptions menuOption;
+    public int levelNumber = 1;
+    public string levelName = "";
+    void Start()
+    {
+        defaultColor = renderer.material.color;
+        if (menuOption == LevelOptions.Level){
+            TextMesh mesh = (TextMesh)this.GetComponent("TextMesh");
+            mesh.text= "Level " + levelNumber;
+        }
+    }
+    Color defaultColor;
+    void OnMouseEnter()
+    {
+        renderer.material.color = Color.yellow;
+    }
+    void OnMouseExit()
+    {
+        renderer.material.color = defaultColor;
+    }
+    void OnMouseUp()
+    {
+        if (menuOption == LevelOptions.Level)
+        {
+            Application.LoadLevel(levelName);
+        }
+        if (menuOption == LevelOptions.Navigate)
+        {
+            Application.LoadLevel(levelName);
+        }
+        if (menuOption == LevelOptions.MainMenu)
+        {
+            Application.LoadLevel("MainMenu");
+        }
+
+    }
+}

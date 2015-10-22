@@ -1,0 +1,26 @@
+using UnityEngine;
+using System.Collections;
+
+public class TriggerTarget : MonoBehaviour {
+
+    public float speed = 1f;
+    public Trigger trigger;
+    public virtual void Start()
+    {
+        trigger.AddTarget(this);
+        audio.volume = Constants.effectsVolume/4;
+    }
+
+    protected virtual void Update()
+    {
+    }
+    public virtual void Activate()
+    {
+        audio.Play();
+    }
+    public virtual void Deactivate()
+    {
+        audio.Play();
+    }
+    
+}

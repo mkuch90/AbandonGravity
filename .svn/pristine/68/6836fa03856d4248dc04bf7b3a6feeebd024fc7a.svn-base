@@ -1,0 +1,91 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+
+[RequireComponent(typeof(Transform))]
+public abstract class GravityObject : MonoBehaviour {
+
+	
+    
+	
+	public List<FactorGravityMod> strengthMod;
+	public List<DirectionGravityMod> directionMod;
+
+
+	protected Vector3 directionModFactor = new Vector3(1, 1, 1);
+	protected float strengthFactor = 1f;
+
+	public Vector3 getPosition(){
+		return transform.position;	
+	}
+	/// <summary>
+	/// Gets the acceleration this object imparts due to gravity. Uses basic Newtonian physics.
+	/// </summary>
+	/// <returns>
+	/// The acceleration in the form of a 3-Dimentional vector.
+	/// </returns>
+	/// <param name='sourcePosition'>
+	/// The position of the object being affected by this object.
+	/// </param>
+	public abstract Vector3 getAcceleration(Vector3 sourcePosition);
+	void Start()
+	{
+        GravityManager.addObject(this);
+	}
+	void OnDestroy () {
+        GravityManager.RemoveObject(this);
+	}
+	
+	// Update is called once per frame
+	void Update()
+	{
+		directionModFactor = new Vector3(0, -1, 0);
+		int count = 0;
+		foreach (DirectionGravityMod mod in directionMod)
+		{
+			if (mod.IsActivated())
+			{
+				directionModFactor = mod.GetDirectionFactor();
+				if (mod.JustActivated())
+				{
+					DeactivateNotNewlyActivated();
+					break;
+				}
+				count++; //This can be replaced with a break if we find two.
+			}
+		}
+		if (count > 1)
+		{
+			Debug.LogError("Multiple Mods Active");
+		}
+		
+
+		strengthFactor = 1;
+		foreach (FactorGravityMod mod in strengthMod)
+		{
+			if (mod.IsActivated())
+			{
+				strengthFactor*=mod.GetFactor();
+				
+			}
+		}
+	}
+	void DeactivateNotNewlyActivated()
+	{
+		foreach (DirectionGravityMod mod in directionMod)
+		{
+			if (mod.IsActivated())
+			{
+				if (mod.JustActivated())
+				{
+					mod.ResetJustActivated();
+				}
+				else
+				{
+					mod.SetAllActive(false);
+				}
+			}
+		}
+	}
+}

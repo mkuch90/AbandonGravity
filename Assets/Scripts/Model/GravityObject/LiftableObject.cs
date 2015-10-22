@@ -1,0 +1,115 @@
+using UnityEngine;
+using System.Collections;
+
+public class LiftableObject : GravityTarget,ResponseTarget,MassObject
+{
+    private PlatformerController controller;
+	private RigidbodyConstraints defaultConstraints;
+	private Vector3 targetPosition;
+	private Vector3 playerUp;
+	private Vector3 playerForward;
+    private bool enablePhysics = true;
+    void Start()
+    {
+		controller = (PlatformerController)FindObjectOfType(typeof(PlatformerController)); 
+        ResponseManager.AddGrabbableObject(this);
+        //audio.volume = Constants.effectsVolume/2;
+    }
+    public override void FixedUpdate()
+    {
+        if (enablePhysics)
+        {
+            base.FixedUpdate();
+            return;
+        }
+		transform.position = targetPosition;
+		Quaternion oldRotation = GetComponent<Rigidbody>().rotation;
+		if (playerForward.sqrMagnitude > 0 && playerUp.sqrMagnitude > 0)
+		{
+			GetComponent<Rigidbody>().rotation = Quaternion.Lerp(oldRotation, Quaternion.LookRotation((playerForward), playerUp), Time.deltaTime * 20);
+		}
+        GetComponent<Rigidbody>().velocity =Vector3.zero;
+        
+    }
+    public void Activate()
+    {
+        enablePhysics = false;
+        if (controller == null)
+        {
+            return;
+        }
+        controller.GrabObject(this);
+		this.gameObject.layer = 2;  //Disable raycasting so we can detect a wall on the other side of the box
+    }
+    public void Deactivate()
+    {
+        enablePhysics = true;
+        if (controller == null)
+        {
+            return;
+        }
+		Quaternion goalRotation = Quaternion.LookRotation((playerForward), playerUp); //get the current rotation of the player
+		goalRotation.x = 0;  //snap the X and y rotation to 0
+		goalRotation.y = 0;
+		GetComponent<Rigidbody>().rotation = goalRotation;  //finish any rotation not already done
+		
+		GetComponent<Rigidbody>().velocity = controller.GetVelocity();
+		this.gameObject.layer =8;  //enables raycsting again
+		
+    }
+    public Vector3 GetPosition()
+    {
+        return transform.position;
+    }
+    public void SetTargetPosition(Vector3 target)
+    {
+        targetPosition = target;
+    }
+	public void SetTargetRotation(Vector3 playerUp, Vector3 playerForward)
+	{
+		this.playerUp = playerUp;
+		this.playerForward = playerForward;
+	}
+    public void OnCollisionEnter(Collision col)
+    {
+
+        GetComponent<AudioSource>().Play();
+        MassObject obj = col.gameObject.GetComponent<LiftableObject>();
+        if (obj == null)
+        {
+            obj = col.gameObject.GetComponent<PlatformerController>();
+        }
+        if (obj == null)
+        {
+            return;
+        }
+        MassObjectManager.LinkObjects(obj, this);
+    }
+    public void OnCollisionExit(Collision col)
+    {
+        MassObject obj = col.gameObject.GetComponent<LiftableObject>();
+        if (obj == null)
+        {
+            obj = col.gameObject.GetComponent<PlatformerController>();
+        }
+        if (obj == null)
+        {
+            return;
+        }
+        MassObjectManager.UnlinkObjects(this,obj); // this will only work for a two object system.
+    }
+    public void OnDestroy()
+    {
+        ResponseManager.RemoveGrabbableObject(this);
+    }
+    public float GetMass()
+    {
+        return GetComponent<Rigidbody>().mass;
+    }
+	public void VisualCue()
+	{
+		//do something visual
+	}
+
+
+}

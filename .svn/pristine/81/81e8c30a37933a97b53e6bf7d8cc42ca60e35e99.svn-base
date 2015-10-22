@@ -1,0 +1,274 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEngine;
+using System.Collections;
+
+public struct GroundRaycast
+{
+	public bool isGrounded;
+	public bool didHit;
+	public Vector3 hitLocation;
+	public Vector3 sourceLocation;
+	public bool closeToGround;
+	public RaycastHit hit;
+	public bool highAngleGround;
+}
+public struct ForwardRaycast
+{
+	public bool didHit;
+	public Vector3 hitLocation;
+	public Vector3 sourceLocation;
+	public RaycastHit hit;
+}
+
+/// <summary>
+///  The concept of this class is it measures the world around the player.
+///  There are two downward raycasts which measure the distance to the ground on either side of the player.
+///  Having two raycasts strattling the player prevents the player from
+///  getting stuck on geometry caused by the Unity physics engine.  
+///     
+/// Measuring the slope allows us to say the angle is too high to walk on. 
+/// If both raycasts are close enough to the ground to walk, and both are too high and angle
+/// to walk, the slope of the ground is averaged. This is to prevent the player gettin stuck
+/// on a pointy surface. If a play encounters a pointy surface,  such as  ^  , it will basically regiser
+/// as a flat surface.
+/// 
+/// There is a forwad raycast that measures the distance to the wall in fromt of the player.
+/// This is to stop the player from pusing a box through walls when holding a box. 
+/// </summary>
+class PlatformerWorldModel
+{
+    private Vector3 gravity;
+    private Vector3 gravityDirectionNormal;
+    private bool isGrounded;
+
+	private GroundRaycast alphaRay;
+	private GroundRaycast betaRay;
+	private ForwardRaycast forwardRay;
+	public bool pointyGround = false;
+
+  
+    private const float RaycastDistance = 100f;  //Further than we need
+    private const float RaycastOffset = .2f;  //distance fo the right and left raycast
+    private const float RaycastVertOffset = .7f; //moved the raycast to the feet
+    private float lastGroundedTime = 0f; 
+
+    //Serialized
+	public float GroundDistanceAllowed = .5f;  //how far above the gound is considered "Grounded". Experimntally determined along with the RaycastVertOffset
+    public float MaxSlopeAllowed = 0.8f;  //Dot product of slope and gravity direction, experimentally determined, ~35 degrees
+    
+	/// <summary>
+	/// Updates the state of the player with respect to gravity.
+	/// TODO: Profile performance.
+	/// </summary>
+	/// <param name="position"></param>
+    public void TakeGravityMeasurement(Vector3 position)
+    {
+        //Update gravity measurements
+        gravity = GravityManager.GetAcceleration(position);
+        gravityDirectionNormal = gravity.normalized;
+    }
+	/// <summary>
+	/// Takes a measurement of the position of the world. 
+	/// Figures out the ground and what's in front of the player.
+	/// </summary>
+	/// <param name="position">Player position</param>
+	/// <param name="forwardDirection">Forward direction</param>
+    public void TakePositionMeasurements(Vector3 position,Vector3 forwardDirection)
+	{
+		alphaRay = TakeMeasurement(true,position);
+		betaRay = TakeMeasurement(false,position);
+
+		forwardRay.sourceLocation = position - GravityDirection() * (RaycastVertOffset/2);
+		forwardRay.didHit = Physics.Raycast(forwardRay.sourceLocation, forwardDirection, out forwardRay.hit, RaycastDistance);
+		forwardRay.hitLocation = forwardRay.sourceLocation + forwardDirection * forwardRay.hit.distance;
+		
+		//Debug.Log ("Alpha: "+ Vector3.Dot (alphaRay.hit.normal,forwardDirection));
+		//Debug.Log ("Beta: "+ Vector3.Dot (betaRay.hit.normal,forwardDirection));
+		isGrounded = (alphaRay.isGrounded) || (betaRay.isGrounded);
+		pointyGround = false;
+		if ((alphaRay.highAngleGround && betaRay.highAngleGround) && ! isGrounded)
+		{
+			float gamma = Math.Abs(Vector3.Dot((alphaRay.hit.normal + betaRay.hit.normal).normalized, -gravityDirectionNormal));
+			isGrounded = gamma > MaxSlopeAllowed && (alphaRay.hit.distance < GroundDistanceAllowed*2 &&betaRay.hit.distance < GroundDistanceAllowed*2);
+			pointyGround = true;
+		}
+        if (isGrounded)
+        {
+            lastGroundedTime = Time.time;
+        }
+    }
+	/// <summary>
+	/// Helper function of TakePositionMeasurement for measuring the ground
+	/// </summary>
+	/// <param name="positiveOffset"> Whether or not this is the front or back of the player.</param>
+	/// <param name="position">Player position</param>
+	/// <returns></returns>
+	private GroundRaycast TakeMeasurement( bool positiveOffset, Vector3 position)
+	{
+		GroundRaycast raycast;
+		if (positiveOffset)
+		{
+			raycast.sourceLocation = position + Constants.Rotate90(GravityDirection()) * (RaycastOffset) + GravityDirection() * RaycastVertOffset;
+		}
+		else
+		{
+			raycast.sourceLocation =  position - Constants.Rotate90(GravityDirection()) * (RaycastOffset) + GravityDirection() * RaycastVertOffset;
+
+		}
+		raycast.didHit = Physics.Raycast(raycast.sourceLocation, gravityDirectionNormal, out raycast.hit, RaycastDistance);
+		raycast.hitLocation = raycast.sourceLocation + gravityDirectionNormal * raycast.hit.distance;
+		if (!raycast.didHit)
+		{
+			raycast.closeToGround = false;
+			raycast.isGrounded = false;
+			raycast.highAngleGround = false;
+			return raycast;
+		}
+
+		raycast.closeToGround = raycast.hit.distance < GroundDistanceAllowed;
+		raycast.highAngleGround = Math.Abs(Vector3.Dot(raycast.hit.normal, -gravityDirectionNormal)) < MaxSlopeAllowed;
+		raycast.isGrounded = raycast.closeToGround && !raycast.highAngleGround;
+		return raycast;
+
+	}
+	/// <summary>
+	/// Gets the vector pointing out of the ground
+	/// </summary>
+	/// <returns>ground normal</returns>
+	public Vector3 GroundNormal()
+	{
+		if (alphaRay.closeToGround && betaRay.closeToGround)
+		{
+			return (alphaRay.hit.normal + betaRay.hit.normal).normalized;
+		}
+		if (alphaRay.closeToGround)
+		{
+			return alphaRay.hit.normal;
+		}
+		if (betaRay.closeToGround)
+		{
+			return betaRay.hit.normal;
+		}
+		return -GravityDirection();
+	}
+	/// <summary>
+	/// Is the player on the ground and able to walk?
+	/// </summary>
+	/// <returns>bool</returns>
+    public bool IsGrounded()
+    {
+        return isGrounded;
+    }
+	/// <summary>
+	/// Gets the distance to the ground
+	/// </summary>
+	/// <returns></returns>
+    public float DistanceToGround()
+    {
+		if (alphaRay.didHit && betaRay.didHit)
+        {
+            return Math.Min(alphaRay.hit.distance, betaRay.hit.distance);
+        }
+		else if (alphaRay.didHit)
+        {
+			return betaRay.hit.distance;
+        }
+		else if (betaRay.didHit)
+        {
+			return betaRay.hit.distance;
+        }
+        return RaycastDistance;
+    }
+	/// <summary>
+	/// Gets the opposite of the direction gravity is pointing. Up.
+	/// Used to transform local rotation to global coordinates.
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 GravityDirectionUp()
+    {
+        return -gravityDirectionNormal;
+    }
+	/// <summary>
+	/// Gets the direction gravity is pointing. Down.
+	/// Used to transform local rotation to global coordinates.
+	/// It is the acceleration due to gravity normalized.
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 GravityDirection()
+    {
+        return gravityDirectionNormal;
+    }
+	/// <summary>
+	/// Returns the acceleration due to gravity.
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 GravityAcceleration()
+    {
+        return gravity;
+    }
+	/// <summary>
+	/// Is the player close to the ground and on a high angle slope?
+	/// </summary>
+	/// <returns></returns>
+    public bool HighAngleNotGrounded()
+    {
+		return !IsGrounded() &&((alphaRay.highAngleGround &&alphaRay.closeToGround) || (betaRay.highAngleGround&&betaRay.closeToGround));
+    }
+	/// <summary>
+	/// Returns a vector which runs along the surface of the ground
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 SurfaceSlope()
+    {
+        return Constants.Rotate90(GroundNormal());
+    }
+	/// <summary>
+	/// Gets the last time the player was on the gound
+	/// </summary>
+	/// <returns></returns>
+	public float GetLastGroundedTime()
+	{
+		return lastGroundedTime;
+	}
+	/// <summary>
+	/// Returns whether or not the player should be slinding (currently high angle not grounded).
+	/// </summary>
+	/// <returns></returns>
+	public bool IsSliding()
+	{
+		return HighAngleNotGrounded();
+	}
+	/// <summary>
+	/// distance to the object ahead of the player.
+	/// Used for stopping the player from pushing the box through a wall.
+	/// </summary>
+	/// <returns></returns>
+	public float GetForwardDistance()
+	{
+		return forwardRay.hit.distance;
+	}
+	/// <summary>
+	/// The following four functions are used for debugging.
+	/// </summary>
+	/// <returns></returns>
+    public Vector3 AlphaHitLocation()
+    {
+		return alphaRay.hitLocation;
+    }
+    public Vector3 BetaHitLocation()
+    {
+		return betaRay.hitLocation;
+    }
+    public Vector3 AlphaSourceLocation()
+    {
+		return alphaRay.sourceLocation;
+    }
+    public Vector3 BetaSourceLocation()
+    {
+		return betaRay.sourceLocation;
+    }
+    
+}

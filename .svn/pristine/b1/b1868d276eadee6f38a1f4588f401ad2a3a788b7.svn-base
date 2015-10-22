@@ -1,0 +1,21 @@
+using UnityEngine;
+using System.Collections;
+/// <summary>
+/// Stub class for abstracting a controller.
+/// </summary>
+public class Controller : MonoBehaviour {
+
+    public PlatformerController platformer;
+    public GravityManager gravityManager;
+    public ResponseManager responseManager;
+
+	// Use this for initialization
+	void Start () {
+	
+	}
+	
+	// Update is called once per frame
+	void Update () {
+	
+	}
+}

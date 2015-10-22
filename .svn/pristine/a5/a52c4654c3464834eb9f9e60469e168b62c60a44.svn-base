@@ -1,0 +1,91 @@
+-debug
+-target:library
+-nowarn:0169
+-out:Temp/Assembly-CSharp.dll
+-r:"C:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEngine.dll"
+-r:Library/ScriptAssemblies/Assembly-CSharp-firstpass.dll
+-r:"C:/Program Files (x86)/Unity/Editor/Data/Managed/UnityEditor.dll"
+-define:UNITY_STANDALONE_WIN
+-define:ENABLE_MICROPHONE
+-define:ENABLE_TEXTUREID_MAP
+-define:ENABLE_AUDIO_FMOD
+-define:UNITY_STANDALONE
+-define:ENABLE_MONO
+-define:ENABLE_SPRITES
+-define:ENABLE_TERRAIN
+-define:ENABLE_GENERICS
+-define:ENABLE_SUBSTANCE
+-define:INCLUDE_WP8SUPPORT
+-define:ENABLE_MOVIES
+-define:ENABLE_WWW
+-define:ENABLE_IMAGEEFFECTS
+-define:ENABLE_WEBCAM
+-define:INCLUDE_METROSUPPORT
+-define:RENDER_SOFTWARE_CURSOR
+-define:ENABLE_NETWORK
+-define:ENABLE_PHYSICS
+-define:ENABLE_CACHING
+-define:ENABLE_CLOTH
+-define:ENABLE_2D_PHYSICS
+-define:ENABLE_SHADOWS
+-define:ENABLE_AUDIO
+-define:ENABLE_NAVMESH_CARVING
+-define:ENABLE_DUCK_TYPING
+-define:ENABLE_SINGLE_INSTANCE_BUILD_SETTING
+-define:UNITY_4_3_0
+-define:UNITY_4_3
+-define:ENABLE_PROFILER
+-define:UNITY_EDITOR
+-define:UNITY_EDITOR_WIN
+Assets/Scripts/Controller/Controller.cs
+Assets/Scripts/Controller/DeathMenu.cs
+Assets/Scripts/Controller/DeathMenuContainer.cs
+Assets/Scripts/Controller/MainMenuMenuOption.cs
+Assets/Scripts/Controller/MenuContainer.cs
+Assets/Scripts/Controller/MenuOption.cs
+Assets/Scripts/Controller/PauseMenuContainer.cs
+Assets/Scripts/Controller/QuitMenuOption.cs
+Assets/Scripts/Controller/ResponseManager.cs
+Assets/Scripts/Controller/RestartLevelMenuOption.cs
+Assets/Scripts/Controller/UnpauseButtonMenuOption.cs
+Assets/Scripts/DebugRaycast.cs
+Assets/Scripts/Model/Asteroid.cs
+Assets/Scripts/Model/Camera/CameraFlyby.cs
+Assets/Scripts/Model/Camera/CameraScrolling.cs
+Assets/Scripts/Model/Camera/CameraTargetAttributes.cs
+"Assets/Scripts/Model/Character Controls/PlatformerController.cs"
+"Assets/Scripts/Model/Character Controls/PlatformerPlayerAnimation.cs"
+"Assets/Scripts/Model/Character Controls/PlatformerWorldModel.cs"
+Assets/Scripts/Model/FastRotation.cs
+Assets/Scripts/Model/GravityObject/ComplexObject.cs
+Assets/Scripts/Model/GravityObject/ConstantGravityObject.cs
+Assets/Scripts/Model/GravityObject/DirectionGravityMod.cs
+Assets/Scripts/Model/GravityObject/FactorGravityMod.cs
+Assets/Scripts/Model/GravityObject/GravityManager.cs
+Assets/Scripts/Model/GravityObject/GravityMod.cs
+Assets/Scripts/Model/GravityObject/GravityObject.cs
+Assets/Scripts/Model/GravityObject/GravityResponseTarget.cs
+Assets/Scripts/Model/GravityObject/GravityTarget.cs
+Assets/Scripts/Model/GravityObject/LiftableObject.cs
+Assets/Scripts/Model/GravityObject/LiftableObjectManager.cs
+Assets/Scripts/Model/GravityObject/MassObject.cs
+Assets/Scripts/Model/GravityObject/NewtonGravityObject.cs
+Assets/Scripts/Model/Input/InputWatcher.cs
+Assets/Scripts/Model/Level/BackgroundMusic.cs
+Assets/Scripts/Model/Level/Constants.cs
+Assets/Scripts/Model/Level/DeathTrigger.cs
+Assets/Scripts/Model/Level/LevelAttributes.cs
+Assets/Scripts/Model/Level/LevelLoader.cs
+Assets/Scripts/Model/Level/SpawnPoint.cs
+Assets/Scripts/Model/Triggers/ButtonTrigger.cs
+Assets/Scripts/Model/Triggers/DeathZone.cs
+Assets/Scripts/Model/Triggers/DoorTriggerTarget.cs
+Assets/Scripts/Model/Triggers/ResponseTarget.cs
+Assets/Scripts/Model/Triggers/Trigger.cs
+Assets/Scripts/Model/Triggers/TriggerTarget.cs
+"Assets/Scripts/View/Heads-Up Display/ButtonOption.cs"
+"Assets/Scripts/View/Heads-Up Display/ButtonOptions.cs"
+"Assets/Scripts/View/Heads-Up Display/ContextInfo.cs"
+"Assets/Scripts/View/Heads-Up Display/ContextInfoDisplay.cs"
+-r:"C:/Program Files (x86)/Unity/Editor/Data/Mono\lib/mono/unity\System.Runtime.Serialization.dll"
+-r:"C:/Program Files (x86)/Unity/Editor/Data/Mono\lib/mono/unity\System.Xml.Linq.dll"

@@ -1,0 +1,15 @@
+using UnityEngine;
+using System.Collections;
+
+public class ButtonOption {
+
+    public ResponseTarget target;
+    public string message;
+    public KeyCode button;
+
+    public string GetDisplay()
+    {
+        return "Press " + button.ToString() + " " + message;
+    }
+	
+}

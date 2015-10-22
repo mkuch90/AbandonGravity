@@ -1,0 +1,18 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\2D\Camera\CameraScrolling.cs">
+    <Files>
+      <File FileName="Assets\Scripts\2D\GravityObject\GravityTarget.cs" Line="18" Column="54" />
+      <File FileName="Assets\Scripts\2D\PlatformTarget.cs" Line="1" Column="1" />
+      <File FileName="Assets\Scripts\2D\LevelAttributes.cs" Line="28" Column="5" />
+      <File FileName="Assets\Scripts\2D\Character Controls\PlatformerController.cs" Line="4" Column="73" />
+      <File FileName="Assets\Scripts\2D\GravityObject\GravityManager.cs" Line="43" Column="27" />
+      <File FileName="Assets\Scripts\2D\GravityObject\GravityObject.cs" Line="30" Column="59" />
+      <File FileName="Assets\Scripts\2D\Camera\CameraScrolling.cs" Line="51" Column="102" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

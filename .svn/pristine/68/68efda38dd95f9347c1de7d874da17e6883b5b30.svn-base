@@ -1,0 +1,19 @@
+using UnityEngine;
+using System.Collections;
+
+public static class Constants {
+
+    public const float MaxSpeed = 30f;
+    public const float effectsVolume = 0.3f;
+    public const float musicVolume = 0.1f;
+
+    public static Vector3 Rotate90(Vector3 toBeRot)
+    {
+        Vector3 ret = Vector3.zero;
+        ret.x = -toBeRot.y;
+        ret.y = toBeRot.x;
+        return ret;
+    }
+ 
+    
+}

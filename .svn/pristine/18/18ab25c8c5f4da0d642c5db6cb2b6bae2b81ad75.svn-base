@@ -1,0 +1,79 @@
+using UnityEngine;
+using System.Collections;
+
+public class Trigger : MonoBehaviour {
+
+    public ArrayList targets;
+    public bool triggerEnabled = true;
+
+    protected void Activate()
+    {
+		InitArray();
+        foreach (object obj in targets)
+        {
+            ((TriggerTarget)obj).Activate();
+        }
+    }
+    protected void Deactivate()
+	{
+		InitArray();
+        foreach (object obj in targets)
+        {
+            ((TriggerTarget)obj).Deactivate();
+        }
+    }
+    public virtual void OnCollisionEnter(Collision col)
+	{
+        if (!triggerEnabled)
+        {
+            return;
+		}
+		InitArray();
+        Activate();
+    }
+    
+    public virtual void OnCollisionExit(Collision col)
+    {
+
+        if (!triggerEnabled)
+        {
+            return;
+		}
+		InitArray();
+        Deactivate();
+    }
+    public virtual void OnTriggerEnter(Collider col)
+    {
+        if (!triggerEnabled)
+        {
+            return;
+        }
+
+        Activate();
+    }
+    public virtual void OnTriggerExit(Collider col)
+    {
+        if (!triggerEnabled)
+        {
+            return;
+        }
+        Deactivate();
+    }
+    public void Start()
+    {
+        InitArray();
+    }
+
+    public void AddTarget(TriggerTarget target)
+    {
+        InitArray();
+        targets.Add(target);
+    }
+    private void InitArray()
+    {
+        if (targets == null)
+        {
+            targets = new ArrayList();
+        }
+    }
+}
