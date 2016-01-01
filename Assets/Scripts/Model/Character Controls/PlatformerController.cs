@@ -16,9 +16,9 @@ public class PlatformerController : MonoBehaviour, MassObject
     private SpawnPoint spawnPoint;
     private PlatformerControllerMovement movement;
     private LiftableObject holding;
-    private Transform oldParentOfHeldObject;
+    private Transform old_parent_of_the_held_object;
     private PlatformerWorldModel model;
-    private PlatformerPlayerAnimation ani;
+    private PlatformerPlayerAnimation player_animation;
     private bool fixedUpdateHasRun = false;
     float levelStartTime = 0f;
 
@@ -33,7 +33,7 @@ public class PlatformerController : MonoBehaviour, MassObject
             movement.jumpedOnUpdate = false;
             movement.velocity += (model.GravityDirectionUp() * PlatformerControllerMovement.jumpSpeed); //perhaps needs to be migrated to fixedupdate
             movement.jumpTime = Time.time;
-            ani.PlayJump();
+            player_animation.PlayJump();
         }
         if(movement.jumpTime + PlatformerControllerMovement.jumpOffset < Time.time)  //Wait an offset of time after a jump to allow movement (allows time to unground)
         {
@@ -41,11 +41,11 @@ public class PlatformerController : MonoBehaviour, MassObject
 
             if(Math.Abs(horizontalInput) > 0)  //TODO: move to its own listener waitinf for run and idle
             {
-                ani.PlayRun();
+                player_animation.PlayRun();
             }
             else
             {
-                ani.PlayIdle();
+                player_animation.PlayIdle();
             }
             if(movement.isWalking)
             {
@@ -134,11 +134,11 @@ public class PlatformerController : MonoBehaviour, MassObject
 
             if(holding != null || InputWatcher.horizontalInput() == 0)
             {
-                ani.PlayLand();
+                player_animation.PlayLand();
             }
             else
             {
-                ani.PlayRoll(Time.time - movement.lastTimeOnGround);
+                player_animation.PlayRoll(Time.time - movement.lastTimeOnGround);
             }
         }
 
@@ -187,11 +187,11 @@ public class PlatformerController : MonoBehaviour, MassObject
 
         if(model.HighAngleNotGrounded())
         {
-            ani.PlaySlide();
+            player_animation.PlaySlide();
         }
         else if(!model.IsGrounded())
         {
-            ani.PlayFalling();
+            player_animation.PlayFalling();
             ApplyThrusters(horizontalInput);
         }
         /*
@@ -328,7 +328,7 @@ public class PlatformerController : MonoBehaviour, MassObject
     }
     public void GrabObject(LiftableObject obj)
     {
-        ani.PickUpBox();
+        player_animation.PickUpBox();
         holding = obj;
     }
     public void DropObject()
@@ -337,7 +337,7 @@ public class PlatformerController : MonoBehaviour, MassObject
         {
             return;
         }
-        ani.DropBox();
+        player_animation.DropBox();
         holding.Deactivate();
         holding = null;
     }
@@ -374,7 +374,7 @@ public class PlatformerController : MonoBehaviour, MassObject
         {
             movement = new PlatformerControllerMovement();
         }
-        ani = (PlatformerPlayerAnimation) GetComponent("PlatformerPlayerAnimation");
+        player_animation = (PlatformerPlayerAnimation) GetComponent("PlatformerPlayerAnimation");
         if(model == null)
         {
             model = new PlatformerWorldModel();
@@ -464,7 +464,7 @@ public class PlatformerController : MonoBehaviour, MassObject
     }
     public void PushButton()
     {
-        ani.PlayButtonPress();
+        player_animation.PlayButtonPress();
     }
     public void IsWalking(bool isWalking)
     {
